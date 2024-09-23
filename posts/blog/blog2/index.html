@@ -111,8 +111,8 @@
   "keywords": [
     "Duplicate Address Detection", "Denial of Service Attack", "IPv6 addressing", "IoT mesh network", "WSN"
   ],
-  "articleBody": "一. Building IPv6 addressing scheme using Hybrid Duplicate Address Detection to prevent Denial of Service Attack 1. Duplicate Address Detection Whenever a host is assigned an IPv6 address, it performs a DAD check to ensure that no other hosts are already using or vying for the same address. DAD的过程通常包括以下步骤： \t主机生成一个IPv6地址，并将其标记为“tentative”（临时）状态。 \t主机发送一个邻居发现协议的邻居请求（NS）消息，询问网络上是否有其他设备正在使用这个地址。 \t如果在一定时间内没有收到邻居通告（NA）消息作为响应，或者收到的响应表明没有冲突，那么主机可以确认这个地址是唯一的，并开始使用它。 \t如果收到一个NA消息，表明网络上已经有设备在使用这个地址，主机则必须选择另一个地址或采取其他措施解决冲突。 Static IP address 长期分配给特定设备的IP地址，不会发生变化。 The current defenses against the DAD attack include significant flaws, such as excessive computation, non-scalability, and the need to modify the protocol.\n2. Denial of Service (DoS) and Man-In-The-Middle (MITM) attacks. Denial of Service (DoS) 攻击 DoS攻击是一种使网络服务不可用的攻击方式。攻击者的目标是使目标服务器、服务或网络无法处理合法用户的请求。这通常是通过以下几种方式实现的： \t流量过载：攻击者发送大量流量到目标服务器，使其网络带宽饱和，无法处理正常流量。 \t资源耗尽：攻击者利用服务器或服务的特定漏洞，使其消耗过多资源（如CPU、内存），导致无法响应合法请求。 \t服务拒绝：攻击者通过发送特定的请求，使服务崩溃或进入无法处理其他请求的状态。 Man-In-The-Middle (MITM) 攻击 MITM攻击是一种攻击者插入到两个通信方之间的攻击方式。攻击者可以截获、修改和转发通信双方的数据，而通信方可能毫不知情。这种攻击通常涉及以下步骤： \t拦截通信：攻击者通过各种手段（如伪造Wi-Fi网络）截获两个通信方之间的数据传输。 \t身份伪装：攻击者伪装成合法的通信方，与另一方建立信任关系。 \t数据篡改：攻击者可以读取、修改或注入恶意数据到传输中，而不被通信方察觉。 \t会话劫持：攻击者可能完全接管一个或两个通信方的会话，进行未授权的操作。\n3. What types of network requirements are needed? The hybrid DAD method is demonstrated in this study to reduce the DoS attack during the IPv6 setup process in the network. In IPv6, to enhance privacy and security, IP addresses are commonly divided into two parts: the DAD ID (usually the network prefix) and the node ID (often generated from the device’s MAC address but can also be randomly generated to improve privacy). This method is known as Privacy Extensions for Addresses, and its purpose is to reduce the risk of exposing user privacy information through IP addresses. Address predictability: If the node ID is fixed or predictable (such as those based on a MAC address), it allows attackers to more easily guess or track a specific device’s IP address. Using randomly generated node IDs can reduce this risk. Multicast listening: During the Duplicate Address Detection (DAD) process, address queries are completed by sending multicast messages, which may increase the network’s attack surface. For example, attackers can listen to these multicast requests to identify new devices in the network or prevent legitimate devices from using their IP addresses by sending false neighbor advertisement messages. DAD conflicts: Attackers can intentionally respond to all DAD queries in the network, causing address configuration failure. This type of attack is known as a DAD conflict attack.\n4. The Mechanism Of Hybrid Duplicate Address Detection IPv6地址结构 IPv6地址总长128位，通常被分为两个64位的部分： 全局路由前缀（Global Routing Prefix, GRP）：64位，用于网络路由。 接口标识符（Interface ID, IID）：64位，用于在本地网络中唯一标识接口。 接口标识符的进一步细分接口标识符进一步被分为两个32位部分： 最高有效位（Most Significant bits, MS-32） 最低有效位（Least Significant bits, LS-32）\n这两个部分又各自被分为两个16位部分，用于混合DAD的计算： LS-32 分为： DAD ID（16位） Secret ID-1（16位） MS-32 分为： Node ID（16位） Secret ID-2（16位） 混合DAD值的计算 在进行重复地址检测时，会使用异或（XOR）运算来计算混合DAD值，以提高安全性： 对于邻居请求帧（NS, Neighbor Solicitation）：计算最低有效16位（LS-16），通过对DAD ID和Secret ID-1进行异或（XOR）运算。 对于邻居通告帧（NA, Neighbor Advertisement）：当网络中检测到地址重复时，已建立节点会响应一个携带混合DAD最高有效16位（MS-16）的NA帧。MS-16是通过对Node ID和Secret ID-2进行异或（XOR）运算得到的。这种方法通过使用秘密ID（Secret IDs）和XOR运算，增加了地址配置过程的隐私性和安全性，使得攻击者难以预测或推断出实际的接口标识符。这样的设计可以有效防止一些常见的网络攻击，如地址欺骗和DAD冲突。\n假设的IPv6接口标识符（IID）为 0000:8a2e:0370:7334。 MS-32: 0000:8a2e Node ID: 0000 Secret ID-2: 8a2e LS-32: 0370:7334 DAD ID: 0370 Secret ID-1: 7334 进行XOR计算 MS-16 (混合): 0000 XOR 8a2e = 8a2e LS-16 (混合): 0370 XOR 7334 = 7044 算法 1：使用混合DAD过程的IP配置 初始化：hybrid DAD_count 和 hybrid DAD_timeout 设为初始值。 生成新IP地址：设备尝试使用 0000:8a2e:0370:7334。 广播NS_hybrid DAD：设备发送带有混合 LS-16 (7044) 的NS请求。 接收NA_hybrid DAD：等待网络上其他设备的响应。 循环检测： 如果收到的NA消息是来自一个已经建立的节点，且 MS-16 (8a2e) 匹配，说明地址可能冲突。 如果达到 thresholdDAD（尝试次数上限），并且冲突持续存在，设备会重新生成新的MS位并重复过程。 超时或阈值：如果持续收到冲突响应，或者超时，设备广播网络错误消息并报告失败。 算法 2：验证混合DAD 接收NS_hybrid DAD：设备接收来自其他设备的NS请求，检查 LS-16。 验证LS-16： 如果 LS-16 (7044) 与本地配置匹配，发送NA_hybrid DAD响应，表明存在地址冲突。 如果不匹配，丢弃请求并返回失败，表明地址是唯一的。 结果与通讯 如果DAD过程成功，没有冲突，设备将确认其IP地址 0000:8a2e:0370:7334 是唯一的，并用于通信。 如果存在冲突，设备需重新选择Node ID或DAD ID部分，重新计算，直到没有冲突为止。 这个过程确保IPv6地址在网络上的唯一性，避免了地址冲突，同时通过混合DAD的额外安全措施（使用XOR和秘密ID），增加了网络通信的安全性和隐私保护。\n",
-  "wordCount" : "2198",
+  "articleBody": "Building IPv6 Addressing Scheme using Hybrid Duplicate Address Detection to Prevent Denial of Service Attack 1. Duplicate Address Detection (DAD) Whenever a host is assigned an IPv6 address, it performs a DAD check to ensure that no other hosts are already using or vying for the same address. The DAD process typically includes the following steps:\nThe host generates an IPv6 address and marks it as “tentative”. The host sends a Neighbor Solicitation (NS) message through the Neighbor Discovery Protocol to check if any other device on the network is already using the address. If no Neighbor Advertisement (NA) message is received within a certain time, or the response indicates no conflict, the host can confirm that the address is unique and start using it. If an NA message is received, indicating that the address is already in use, the host must choose another address or take other actions to resolve the conflict. Static IP Address: A static IP address is a long-term assigned IP address for a specific device that does not change over time.\nCurrent defenses against DAD attacks have significant flaws, such as excessive computation, lack of scalability, and the need to modify the protocol.\n2. Denial of Service (DoS) and Man-In-The-Middle (MITM) Attacks Denial of Service (DoS) Attack A DoS attack is a type of attack that aims to make network services unavailable. The goal is to prevent the target server, service, or network from processing legitimate user requests. This is often achieved by:\nTraffic Overload: The attacker sends massive amounts of traffic to the target server, saturating the network bandwidth so that legitimate traffic cannot be processed. Resource Exhaustion: The attacker exploits specific vulnerabilities in the server or service, causing it to consume excessive resources (e.g., CPU, memory), which prevents it from responding to legitimate requests. Service Denial: The attacker sends specific requests that cause the service to crash or enter a state where it can no longer handle other requests. Man-In-The-Middle (MITM) Attack MITM attacks involve an attacker inserting themselves between two communicating parties. The attacker can intercept, modify, and forward the data between them, often without either party knowing. This type of attack usually follows these steps:\nIntercepting Communication: The attacker intercepts data being transmitted between two parties, for example, by creating a fake Wi-Fi network. Impersonation: The attacker pretends to be a legitimate party to establish a trusted connection with one of the communication parties. Data Tampering: The attacker can read, modify, or inject malicious data into the communication without detection. Session Hijacking: The attacker may completely take over the session of one or both parties and perform unauthorized actions. 3. Network Requirements for Hybrid DAD The hybrid DAD method, demonstrated in this study, reduces the risk of DoS attacks during the IPv6 setup process. To enhance privacy and security, IPv6 addresses are typically divided into two parts: the DAD ID (usually the network prefix) and the Node ID (often derived from the device’s MAC address, but can also be randomly generated to improve privacy). This method, known as Privacy Extensions for Addresses, reduces the risk of exposing user privacy through IP addresses.\nAddress Predictability: If the Node ID is fixed or predictable (such as those based on MAC addresses), attackers can more easily guess or track a device’s IP address. Using randomly generated Node IDs helps mitigate this risk. Multicast Listening: During the DAD process, address queries are sent using multicast messages, which increases the attack surface. Attackers could potentially listen to these multicast requests to identify new devices on the network or prevent legitimate devices from using their IP addresses by sending false Neighbor Advertisement messages. DAD Conflicts: Attackers can intentionally respond to all DAD queries, causing address configuration failures. This type of attack is known as a DAD conflict attack. 4. The Mechanism of Hybrid Duplicate Address Detection IPv6 addresses are 128 bits long and are typically divided into two 64-bit parts:\nGlobal Routing Prefix (GRP): 64 bits used for network routing. Interface Identifier (IID): 64 bits used to uniquely identify an interface on the local network. The IID is further divided into two 32-bit sections:\nMost Significant Bits (MS-32) Least Significant Bits (LS-32) Each of these sections is further divided into two 16-bit parts for hybrid DAD calculation:\nLS-32 is split into:\nDAD ID (16 bits) Secret ID-1 (16 bits) MS-32 is split into:\nNode ID (16 bits) Secret ID-2 (16 bits) Hybrid DAD Calculation In the DAD process, XOR operations are used to calculate hybrid DAD values to improve security:\nFor Neighbor Solicitation (NS) frames, the LS-16 value is calculated by XORing the DAD ID with Secret ID-1. For Neighbor Advertisement (NA) frames, when a duplicate address is detected, established nodes respond with an NA frame carrying the hybrid MS-16 value, which is the XOR of the Node ID with Secret ID-2. This technique increases privacy and security during address configuration by making it harder for attackers to predict or infer the actual interface identifier.\nExample: Assume the IPv6 Interface ID (IID) is 0000:8a2e:0370:7334.\nMS-32: 0000:8a2e\nNode ID: 0000 Secret ID-2: 8a2e LS-32: 0370:7334\nDAD ID: 0370 Secret ID-1: 7334 XOR Calculation: MS-16 (Hybrid): 0000 XOR 8a2e = 8a2e LS-16 (Hybrid): 0370 XOR 7334 = 7044 5. Algorithm 1: Hybrid DAD IP Configuration Process Initialize hybrid DAD_count and hybrid DAD_timeout. Generate a new IP address: the device attempts to use 0000:8a2e:0370:7334. Broadcast NS_hybrid DAD: the device sends an NS request with the hybrid LS-16 value (7044). Receive NA_hybrid DAD: the device waits for responses from other devices. Loop Detection: If an NA message is received from an established node and the MS-16 value (8a2e) matches, it indicates a potential address conflict. If the conflict persists after reaching the thresholdDAD (max attempts), the device regenerates a new MS value and repeats the process. Timeout or Threshold: if conflicts persist or timeout occurs, the device broadcasts a network error message and reports failure. 6. Algorithm 2: Hybrid DAD Verification Receive NS_hybrid DAD: the device receives an NS request from another device and checks the LS-16 value. Verify LS-16: If the LS-16 value (7044) matches the local configuration, the device sends an NA_hybrid DAD response, indicating an address conflict. If not, the request is discarded, indicating the address is unique. 7. Results and Communication If the DAD process succeeds with no conflicts, the device confirms that the IP address 0000:8a2e:0370:7334 is unique and starts using it for communication. If there are conflicts, the device needs to regenerate either the Node ID or DAD ID and recalculate the XOR values until no conflicts are detected. This process ensures the uniqueness of IPv6 addresses in the network and, with the added security of hybrid DAD (using XOR and Secret IDs), enhances the privacy and security of network communication by preventing common attacks like address spoofing and DAD conflicts.\n",
+  "wordCount" : "1143",
   "inLanguage": "zh",
   "image":"https://Clow5211.github.io/posts/blog/blog2/th.jpg","datePublished": "2024-09-23T13:00:00+08:00",
   "dateModified": "2024-09-23T13:00:00+08:00",
@@ -261,13 +261,13 @@
     
     <span id="post_meta_style_3">
         <span class="fa fa-file-word-o"></span>
-        <span>2198字
+        <span>1143字
             &nbsp;&nbsp;
         </span>
     </span>
     <span id="post_meta_style_4">
         <span class="fa fa-clock-o"></span>
-        <span>5分钟
+        <span>3分钟
             &nbsp;&nbsp;
         </span>
     </span>
@@ -302,16 +302,38 @@
 
         <div class="inner"><ul>
                 <li>
-                    <a href="#%e4%b8%80-building-ipv6-addressing-scheme-using-hybrid-duplicate-address-detection-to-prevent-denial-of-service-attack" aria-label="一. Building IPv6 addressing scheme using Hybrid Duplicate Address Detection to prevent Denial of Service Attack">一. Building IPv6 addressing scheme using Hybrid Duplicate Address Detection to prevent Denial of Service Attack</a><ul>
+                    <a href="#building-ipv6-addressing-scheme-using-hybrid-duplicate-address-detection-to-prevent-denial-of-service-attack" aria-label="Building IPv6 Addressing Scheme using Hybrid Duplicate Address Detection to Prevent Denial of Service Attack">Building IPv6 Addressing Scheme using Hybrid Duplicate Address Detection to Prevent Denial of Service Attack</a><ul>
                         
                 <li>
-                    <a href="#1-duplicate-address-detection" aria-label="1. Duplicate Address Detection">1. Duplicate Address Detection</a></li>
+                    <a href="#1-duplicate-address-detection-dad" aria-label="1. Duplicate Address Detection (DAD)">1. Duplicate Address Detection (DAD)</a></li>
                 <li>
-                    <a href="#2-denial-of-service-dos-and-man-in-the-middle-mitm-attacks" aria-label="2. Denial of Service (DoS) and Man-In-The-Middle (MITM) attacks.">2. Denial of Service (DoS) and Man-In-The-Middle (MITM) attacks.</a></li>
+                    <a href="#2-denial-of-service-dos-and-man-in-the-middle-mitm-attacks" aria-label="2. Denial of Service (DoS) and Man-In-The-Middle (MITM) Attacks">2. Denial of Service (DoS) and Man-In-The-Middle (MITM) Attacks</a><ul>
+                        
                 <li>
-                    <a href="#3-what-types-of-network-requirements-are-needed" aria-label="3. What types of network requirements are needed?">3. What types of network requirements are needed?</a></li>
+                    <a href="#denial-of-service-dos-attack" aria-label="Denial of Service (DoS) Attack">Denial of Service (DoS) Attack</a></li>
                 <li>
-                    <a href="#4-the-mechanism--of--hybrid-duplicate-address-detection" aria-label="4. The Mechanism  Of  Hybrid Duplicate Address Detection">4. The Mechanism  Of  Hybrid Duplicate Address Detection</a>
+                    <a href="#man-in-the-middle-mitm-attack" aria-label="Man-In-The-Middle (MITM) Attack">Man-In-The-Middle (MITM) Attack</a></li></ul>
+                </li>
+                <li>
+                    <a href="#3-network-requirements-for-hybrid-dad" aria-label="3. Network Requirements for Hybrid DAD">3. Network Requirements for Hybrid DAD</a></li>
+                <li>
+                    <a href="#4-the-mechanism-of-hybrid-duplicate-address-detection" aria-label="4. The Mechanism of Hybrid Duplicate Address Detection">4. The Mechanism of Hybrid Duplicate Address Detection</a><ul>
+                        
+                <li>
+                    <a href="#hybrid-dad-calculation" aria-label="Hybrid DAD Calculation">Hybrid DAD Calculation</a></li>
+                <li>
+                    <a href="#example" aria-label="Example:">Example:</a><ul>
+                        
+                <li>
+                    <a href="#xor-calculation" aria-label="XOR Calculation:">XOR Calculation:</a></li></ul>
+                </li></ul>
+                </li>
+                <li>
+                    <a href="#5-algorithm-1-hybrid-dad-ip-configuration-process" aria-label="5. Algorithm 1: Hybrid DAD IP Configuration Process">5. Algorithm 1: Hybrid DAD IP Configuration Process</a></li>
+                <li>
+                    <a href="#6-algorithm-2-hybrid-dad-verification" aria-label="6. Algorithm 2: Hybrid DAD Verification">6. Algorithm 2: Hybrid DAD Verification</a></li>
+                <li>
+                    <a href="#7-results-and-communication" aria-label="7. Results and Communication">7. Results and Communication</a>
                 </li>
             </ul>
             </li>
@@ -320,82 +342,136 @@
     </details>
 </div>
 
-  <div class="post-content"><h2 id="一-building-ipv6-addressing-scheme-using-hybrid-duplicate-address-detection-to-prevent-denial-of-service-attack">一. Building IPv6 addressing scheme using Hybrid Duplicate Address Detection to prevent Denial of Service Attack<a hidden class="anchor" aria-hidden="true" href="#一-building-ipv6-addressing-scheme-using-hybrid-duplicate-address-detection-to-prevent-denial-of-service-attack">#</a></h2>
-<h3 id="1-duplicate-address-detection">1. Duplicate Address Detection<a hidden class="anchor" aria-hidden="true" href="#1-duplicate-address-detection">#</a></h3>
-<p>Whenever a host is assigned an IPv6 address, it performs a DAD check to ensure that no other hosts are already using or vying for the same address.
-DAD的过程通常包括以下步骤：
-	主机生成一个IPv6地址，并将其标记为“tentative”（临时）状态。
-	主机发送一个邻居发现协议的邻居请求（NS）消息，询问网络上是否有其他设备正在使用这个地址。
-	如果在一定时间内没有收到邻居通告（NA）消息作为响应，或者收到的响应表明没有冲突，那么主机可以确认这个地址是唯一的，并开始使用它。
-	如果收到一个NA消息，表明网络上已经有设备在使用这个地址，主机则必须选择另一个地址或采取其他措施解决冲突。
-Static IP address 长期分配给特定设备的IP地址，不会发生变化。
-The current defenses against the DAD attack include significant flaws, such as excessive computation, non-scalability, and the need to modify the protocol.</p>
-<h3 id="2-denial-of-service-dos-and-man-in-the-middle-mitm-attacks">2. Denial of Service (DoS) and Man-In-The-Middle (MITM) attacks.<a hidden class="anchor" aria-hidden="true" href="#2-denial-of-service-dos-and-man-in-the-middle-mitm-attacks">#</a></h3>
-<p>Denial of Service (DoS) 攻击
-DoS攻击是一种使网络服务不可用的攻击方式。攻击者的目标是使目标服务器、服务或网络无法处理合法用户的请求。这通常是通过以下几种方式实现的：
-	流量过载：攻击者发送大量流量到目标服务器，使其网络带宽饱和，无法处理正常流量。
-	资源耗尽：攻击者利用服务器或服务的特定漏洞，使其消耗过多资源（如CPU、内存），导致无法响应合法请求。
-	服务拒绝：攻击者通过发送特定的请求，使服务崩溃或进入无法处理其他请求的状态。
-Man-In-The-Middle (MITM) 攻击
-MITM攻击是一种攻击者插入到两个通信方之间的攻击方式。攻击者可以截获、修改和转发通信双方的数据，而通信方可能毫不知情。这种攻击通常涉及以下步骤：
-	拦截通信：攻击者通过各种手段（如伪造Wi-Fi网络）截获两个通信方之间的数据传输。
-	身份伪装：攻击者伪装成合法的通信方，与另一方建立信任关系。
-	数据篡改：攻击者可以读取、修改或注入恶意数据到传输中，而不被通信方察觉。
-	会话劫持：攻击者可能完全接管一个或两个通信方的会话，进行未授权的操作。</p>
-<h3 id="3-what-types-of-network-requirements-are-needed">3. What types of network requirements are needed?<a hidden class="anchor" aria-hidden="true" href="#3-what-types-of-network-requirements-are-needed">#</a></h3>
-<p>The hybrid DAD method is demonstrated in this study to reduce the DoS attack during the IPv6 setup process in the network. In IPv6, to enhance privacy and security, IP addresses are commonly divided into two parts: the DAD ID (usually the network prefix) and the node ID (often generated from the device&rsquo;s MAC address but can also be randomly generated to improve privacy). This method is known as Privacy Extensions for Addresses, and its purpose is to reduce the risk of exposing user privacy information through IP addresses.
-Address predictability: If the node ID is fixed or predictable (such as those based on a MAC address), it allows attackers to more easily guess or track a specific device&rsquo;s IP address. Using randomly generated node IDs can reduce this risk.
-Multicast listening: During the Duplicate Address Detection (DAD) process, address queries are completed by sending multicast messages, which may increase the network&rsquo;s attack surface. For example, attackers can listen to these multicast requests to identify new devices in the network or prevent legitimate devices from using their IP addresses by sending false neighbor advertisement messages.
-DAD conflicts: Attackers can intentionally respond to all DAD queries in the network, causing address configuration failure. This type of attack is known as a DAD conflict attack.</p>
-<h3 id="4-the-mechanism--of--hybrid-duplicate-address-detection">4. The Mechanism  Of  Hybrid Duplicate Address Detection<a hidden class="anchor" aria-hidden="true" href="#4-the-mechanism--of--hybrid-duplicate-address-detection">#</a></h3>
-<p><img loading="lazy" src="../blog2/format_of_ipv6_address.png" alt="DAD"  />
-</p>
-<p>IPv6地址结构
-IPv6地址总长128位，通常被分为两个64位的部分：
-全局路由前缀（Global Routing Prefix, GRP）：64位，用于网络路由。
-接口标识符（Interface ID, IID）：64位，用于在本地网络中唯一标识接口。
-接口标识符的进一步细分接口标识符进一步被分为两个32位部分：
-最高有效位（Most Significant bits, MS-32）
-最低有效位（Least Significant bits, LS-32）</p>
-<p>这两个部分又各自被分为两个16位部分，用于混合DAD的计算：
-LS-32 分为：
-DAD ID（16位）
-Secret ID-1（16位）
-MS-32 分为：
-Node ID（16位）
-Secret ID-2（16位）
-混合DAD值的计算
-在进行重复地址检测时，会使用异或（XOR）运算来计算混合DAD值，以提高安全性：
-对于邻居请求帧（NS, Neighbor Solicitation）：计算最低有效16位（LS-16），通过对DAD ID和Secret ID-1进行异或（XOR）运算。
-对于邻居通告帧（NA, Neighbor Advertisement）：当网络中检测到地址重复时，已建立节点会响应一个携带混合DAD最高有效16位（MS-16）的NA帧。MS-16是通过对Node ID和Secret ID-2进行异或（XOR）运算得到的。这种方法通过使用秘密ID（Secret IDs）和XOR运算，增加了地址配置过程的隐私性和安全性，使得攻击者难以预测或推断出实际的接口标识符。这样的设计可以有效防止一些常见的网络攻击，如地址欺骗和DAD冲突。</p>
-<p>假设的IPv6接口标识符（IID）为 0000:8a2e:0370:7334。
-MS-32: 0000:8a2e
-Node ID: 0000
-Secret ID-2: 8a2e
-LS-32: 0370:7334
-DAD ID: 0370
-Secret ID-1: 7334
-进行XOR计算
-MS-16 (混合): 0000 XOR 8a2e = 8a2e
-LS-16 (混合): 0370 XOR 7334 = 7044
-算法 1：使用混合DAD过程的IP配置
-初始化：hybrid DAD_count 和 hybrid DAD_timeout 设为初始值。
-生成新IP地址：设备尝试使用 0000:8a2e:0370:7334。
-广播NS_hybrid DAD：设备发送带有混合 LS-16 (7044) 的NS请求。
-接收NA_hybrid DAD：等待网络上其他设备的响应。
-循环检测：
-如果收到的NA消息是来自一个已经建立的节点，且 MS-16 (8a2e) 匹配，说明地址可能冲突。
-如果达到 thresholdDAD（尝试次数上限），并且冲突持续存在，设备会重新生成新的MS位并重复过程。
-超时或阈值：如果持续收到冲突响应，或者超时，设备广播网络错误消息并报告失败。
-算法 2：验证混合DAD
-接收NS_hybrid DAD：设备接收来自其他设备的NS请求，检查 LS-16。
-验证LS-16：
-如果 LS-16 (7044) 与本地配置匹配，发送NA_hybrid DAD响应，表明存在地址冲突。
-如果不匹配，丢弃请求并返回失败，表明地址是唯一的。
-结果与通讯
-如果DAD过程成功，没有冲突，设备将确认其IP地址 0000:8a2e:0370:7334 是唯一的，并用于通信。
-如果存在冲突，设备需重新选择Node ID或DAD ID部分，重新计算，直到没有冲突为止。
-这个过程确保IPv6地址在网络上的唯一性，避免了地址冲突，同时通过混合DAD的额外安全措施（使用XOR和秘密ID），增加了网络通信的安全性和隐私保护。</p>
+  <div class="post-content"><h1 id="building-ipv6-addressing-scheme-using-hybrid-duplicate-address-detection-to-prevent-denial-of-service-attack">Building IPv6 Addressing Scheme using Hybrid Duplicate Address Detection to Prevent Denial of Service Attack<a hidden class="anchor" aria-hidden="true" href="#building-ipv6-addressing-scheme-using-hybrid-duplicate-address-detection-to-prevent-denial-of-service-attack">#</a></h1>
+<h2 id="1-duplicate-address-detection-dad">1. Duplicate Address Detection (DAD)<a hidden class="anchor" aria-hidden="true" href="#1-duplicate-address-detection-dad">#</a></h2>
+<p>Whenever a host is assigned an IPv6 address, it performs a DAD check to ensure that no other hosts are already using or vying for the same address. The DAD process typically includes the following steps:</p>
+<ul>
+<li>The host generates an IPv6 address and marks it as &ldquo;tentative&rdquo;.</li>
+<li>The host sends a Neighbor Solicitation (NS) message through the Neighbor Discovery Protocol to check if any other device on the network is already using the address.</li>
+<li>If no Neighbor Advertisement (NA) message is received within a certain time, or the response indicates no conflict, the host can confirm that the address is unique and start using it.</li>
+<li>If an NA message is received, indicating that the address is already in use, the host must choose another address or take other actions to resolve the conflict.</li>
+</ul>
+<blockquote>
+<p><strong>Static IP Address</strong>: A static IP address is a long-term assigned IP address for a specific device that does not change over time.</p>
+</blockquote>
+<p>Current defenses against DAD attacks have significant flaws, such as excessive computation, lack of scalability, and the need to modify the protocol.</p>
+<hr>
+<h2 id="2-denial-of-service-dos-and-man-in-the-middle-mitm-attacks">2. Denial of Service (DoS) and Man-In-The-Middle (MITM) Attacks<a hidden class="anchor" aria-hidden="true" href="#2-denial-of-service-dos-and-man-in-the-middle-mitm-attacks">#</a></h2>
+<h3 id="denial-of-service-dos-attack">Denial of Service (DoS) Attack<a hidden class="anchor" aria-hidden="true" href="#denial-of-service-dos-attack">#</a></h3>
+<p>A DoS attack is a type of attack that aims to make network services unavailable. The goal is to prevent the target server, service, or network from processing legitimate user requests. This is often achieved by:</p>
+<ul>
+<li><strong>Traffic Overload</strong>: The attacker sends massive amounts of traffic to the target server, saturating the network bandwidth so that legitimate traffic cannot be processed.</li>
+<li><strong>Resource Exhaustion</strong>: The attacker exploits specific vulnerabilities in the server or service, causing it to consume excessive resources (e.g., CPU, memory), which prevents it from responding to legitimate requests.</li>
+<li><strong>Service Denial</strong>: The attacker sends specific requests that cause the service to crash or enter a state where it can no longer handle other requests.</li>
+</ul>
+<h3 id="man-in-the-middle-mitm-attack">Man-In-The-Middle (MITM) Attack<a hidden class="anchor" aria-hidden="true" href="#man-in-the-middle-mitm-attack">#</a></h3>
+<p>MITM attacks involve an attacker inserting themselves between two communicating parties. The attacker can intercept, modify, and forward the data between them, often without either party knowing. This type of attack usually follows these steps:</p>
+<ul>
+<li><strong>Intercepting Communication</strong>: The attacker intercepts data being transmitted between two parties, for example, by creating a fake Wi-Fi network.</li>
+<li><strong>Impersonation</strong>: The attacker pretends to be a legitimate party to establish a trusted connection with one of the communication parties.</li>
+<li><strong>Data Tampering</strong>: The attacker can read, modify, or inject malicious data into the communication without detection.</li>
+<li><strong>Session Hijacking</strong>: The attacker may completely take over the session of one or both parties and perform unauthorized actions.</li>
+</ul>
+<hr>
+<h2 id="3-network-requirements-for-hybrid-dad">3. Network Requirements for Hybrid DAD<a hidden class="anchor" aria-hidden="true" href="#3-network-requirements-for-hybrid-dad">#</a></h2>
+<p>The hybrid DAD method, demonstrated in this study, reduces the risk of DoS attacks during the IPv6 setup process. To enhance privacy and security, IPv6 addresses are typically divided into two parts: the <strong>DAD ID</strong> (usually the network prefix) and the <strong>Node ID</strong> (often derived from the device’s MAC address, but can also be randomly generated to improve privacy). This method, known as <strong>Privacy Extensions for Addresses</strong>, reduces the risk of exposing user privacy through IP addresses.</p>
+<ul>
+<li><strong>Address Predictability</strong>: If the Node ID is fixed or predictable (such as those based on MAC addresses), attackers can more easily guess or track a device&rsquo;s IP address. Using randomly generated Node IDs helps mitigate this risk.</li>
+<li><strong>Multicast Listening</strong>: During the DAD process, address queries are sent using multicast messages, which increases the attack surface. Attackers could potentially listen to these multicast requests to identify new devices on the network or prevent legitimate devices from using their IP addresses by sending false Neighbor Advertisement messages.</li>
+<li><strong>DAD Conflicts</strong>: Attackers can intentionally respond to all DAD queries, causing address configuration failures. This type of attack is known as a <strong>DAD conflict attack</strong>.</li>
+</ul>
+<hr>
+<h2 id="4-the-mechanism-of-hybrid-duplicate-address-detection">4. The Mechanism of Hybrid Duplicate Address Detection<a hidden class="anchor" aria-hidden="true" href="#4-the-mechanism-of-hybrid-duplicate-address-detection">#</a></h2>
+<p>IPv6 addresses are 128 bits long and are typically divided into two 64-bit parts:</p>
+<ol>
+<li><strong>Global Routing Prefix (GRP)</strong>: 64 bits used for network routing.</li>
+<li><strong>Interface Identifier (IID)</strong>: 64 bits used to uniquely identify an interface on the local network.</li>
+</ol>
+<p>The IID is further divided into two 32-bit sections:</p>
+<ul>
+<li><strong>Most Significant Bits (MS-32)</strong></li>
+<li><strong>Least Significant Bits (LS-32)</strong></li>
+</ul>
+<p>Each of these sections is further divided into two 16-bit parts for hybrid DAD calculation:</p>
+<ul>
+<li>
+<p><strong>LS-32</strong> is split into:</p>
+<ul>
+<li><strong>DAD ID (16 bits)</strong></li>
+<li><strong>Secret ID-1 (16 bits)</strong></li>
+</ul>
+</li>
+<li>
+<p><strong>MS-32</strong> is split into:</p>
+<ul>
+<li><strong>Node ID (16 bits)</strong></li>
+<li><strong>Secret ID-2 (16 bits)</strong></li>
+</ul>
+</li>
+</ul>
+<h3 id="hybrid-dad-calculation">Hybrid DAD Calculation<a hidden class="anchor" aria-hidden="true" href="#hybrid-dad-calculation">#</a></h3>
+<p>In the DAD process, XOR operations are used to calculate hybrid DAD values to improve security:</p>
+<ul>
+<li>For <strong>Neighbor Solicitation (NS)</strong> frames, the <strong>LS-16</strong> value is calculated by XORing the <strong>DAD ID</strong> with <strong>Secret ID-1</strong>.</li>
+<li>For <strong>Neighbor Advertisement (NA)</strong> frames, when a duplicate address is detected, established nodes respond with an NA frame carrying the hybrid <strong>MS-16</strong> value, which is the XOR of the <strong>Node ID</strong> with <strong>Secret ID-2</strong>.</li>
+</ul>
+<p>This technique increases privacy and security during address configuration by making it harder for attackers to predict or infer the actual interface identifier.</p>
+<h3 id="example">Example:<a hidden class="anchor" aria-hidden="true" href="#example">#</a></h3>
+<p>Assume the IPv6 Interface ID (IID) is <code>0000:8a2e:0370:7334</code>.</p>
+<ul>
+<li>
+<p><strong>MS-32</strong>: <code>0000:8a2e</code></p>
+<ul>
+<li><strong>Node ID</strong>: <code>0000</code></li>
+<li><strong>Secret ID-2</strong>: <code>8a2e</code></li>
+</ul>
+</li>
+<li>
+<p><strong>LS-32</strong>: <code>0370:7334</code></p>
+<ul>
+<li><strong>DAD ID</strong>: <code>0370</code></li>
+<li><strong>Secret ID-1</strong>: <code>7334</code></li>
+</ul>
+</li>
+</ul>
+<h4 id="xor-calculation">XOR Calculation:<a hidden class="anchor" aria-hidden="true" href="#xor-calculation">#</a></h4>
+<ul>
+<li><strong>MS-16 (Hybrid)</strong>: <code>0000 XOR 8a2e = 8a2e</code></li>
+<li><strong>LS-16 (Hybrid)</strong>: <code>0370 XOR 7334 = 7044</code></li>
+</ul>
+<hr>
+<h2 id="5-algorithm-1-hybrid-dad-ip-configuration-process">5. Algorithm 1: Hybrid DAD IP Configuration Process<a hidden class="anchor" aria-hidden="true" href="#5-algorithm-1-hybrid-dad-ip-configuration-process">#</a></h2>
+<ol>
+<li>Initialize <code>hybrid DAD_count</code> and <code>hybrid DAD_timeout</code>.</li>
+<li>Generate a new IP address: the device attempts to use <code>0000:8a2e:0370:7334</code>.</li>
+<li>Broadcast <strong>NS_hybrid DAD</strong>: the device sends an NS request with the hybrid LS-16 value (<code>7044</code>).</li>
+<li>Receive <strong>NA_hybrid DAD</strong>: the device waits for responses from other devices.</li>
+<li>Loop Detection:
+<ul>
+<li>If an NA message is received from an established node and the MS-16 value (<code>8a2e</code>) matches, it indicates a potential address conflict.</li>
+<li>If the conflict persists after reaching the <code>thresholdDAD</code> (max attempts), the device regenerates a new MS value and repeats the process.</li>
+</ul>
+</li>
+<li>Timeout or Threshold: if conflicts persist or timeout occurs, the device broadcasts a network error message and reports failure.</li>
+</ol>
+<hr>
+<h2 id="6-algorithm-2-hybrid-dad-verification">6. Algorithm 2: Hybrid DAD Verification<a hidden class="anchor" aria-hidden="true" href="#6-algorithm-2-hybrid-dad-verification">#</a></h2>
+<ol>
+<li>Receive <strong>NS_hybrid DAD</strong>: the device receives an NS request from another device and checks the LS-16 value.</li>
+<li>Verify LS-16:
+<ul>
+<li>If the LS-16 value (<code>7044</code>) matches the local configuration, the device sends an NA_hybrid DAD response, indicating an address conflict.</li>
+<li>If not, the request is discarded, indicating the address is unique.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="7-results-and-communication">7. Results and Communication<a hidden class="anchor" aria-hidden="true" href="#7-results-and-communication">#</a></h2>
+<ul>
+<li>If the DAD process succeeds with no conflicts, the device confirms that the IP address <code>0000:8a2e:0370:7334</code> is unique and starts using it for communication.</li>
+<li>If there are conflicts, the device needs to regenerate either the Node ID or DAD ID and recalculate the XOR values until no conflicts are detected.</li>
+</ul>
+<p>This process ensures the uniqueness of IPv6 addresses in the network and, with the added security of hybrid DAD (using XOR and Secret IDs), enhances the privacy and security of network communication by preventing common attacks like address spoofing and DAD conflicts.</p>
 
 
   </div>
