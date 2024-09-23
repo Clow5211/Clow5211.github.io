@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>IPv6 on Clow5211&#39;s Blog</title>
+    <link>https://Clow5211.github.io/tags/ipv6/</link>
+    <description>Recent content in IPv6 on Clow5211&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Mon, 23 Sep 2024 13:00:00 +0800</lastBuildDate><atom:link href="https://Clow5211.github.io/tags/ipv6/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Hybrid Duplicate Address Detection in IPv6 to prevent Denial of Service Attack</title>
+      <link>https://Clow5211.github.io/posts/blog/blog2/</link>
+      <pubDate>Mon, 23 Sep 2024 13:00:00 +0800</pubDate>
+      
+      <guid>https://Clow5211.github.io/posts/blog/blog2/</guid>
+      <description>一种基于DAD的重复地址检测技术</description>
+    </item>
+    
+  </channel>
+</rss>

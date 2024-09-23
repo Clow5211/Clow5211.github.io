@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Hybrid Duplicate Address Detection in IPv6 to prevent Denial of Service Attack | Clow5211&#39;s Blog</title>
+<meta name="keywords" content="Duplicate Address Detection, Denial of Service Attack, IPv6 addressing, IoT mesh network, WSN">
+<meta name="description" content="一种基于DAD的重复地址检测技术">
+<meta name="author" content="
+作者:&nbsp;Clow">
+<link rel="canonical" href="https://Clow5211.github.io/posts/blog/blog2/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.css" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.js" onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://Clow5211.github.io/img/%E7%8C%AB%E7%8C%AB.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://Clow5211.github.io/img/%E7%8C%AB%E7%8C%AB.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://Clow5211.github.io/img/%E7%8C%AB%E7%8C%AB.png">
+<link rel="apple-touch-icon" href="https://Clow5211.github.io/img/%E7%8C%AB%E7%8C%AB.png">
+<link rel="mask-icon" href="https://Clow5211.github.io/img/%E7%8C%AB%E7%8C%AB.png">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="zh" href="https://Clow5211.github.io/posts/blog/blog2/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+
+  
+
+<meta property="og:title" content="Hybrid Duplicate Address Detection in IPv6 to prevent Denial of Service Attack" />
+<meta property="og:description" content="一种基于DAD的重复地址检测技术" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://Clow5211.github.io/posts/blog/blog2/" />
+<meta property="og:image" content="https://Clow5211.github.io/posts/blog/blog2/th.jpg" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-09-23T13:00:00+08:00" />
+<meta property="article:modified_time" content="2024-09-23T13:00:00+08:00" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://Clow5211.github.io/posts/blog/blog2/th.jpg" />
+<meta name="twitter:title" content="Hybrid Duplicate Address Detection in IPv6 to prevent Denial of Service Attack"/>
+<meta name="twitter:description" content="一种基于DAD的重复地址检测技术"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "📚文章",
+      "item": "https://Clow5211.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "🧱 记录",
+      "item": "https://Clow5211.github.io/posts/blog/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  3 ,
+      "name": "Hybrid Duplicate Address Detection in IPv6 to prevent Denial of Service Attack",
+      "item": "https://Clow5211.github.io/posts/blog/blog2/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Hybrid Duplicate Address Detection in IPv6 to prevent Denial of Service Attack",
+  "name": "Hybrid Duplicate Address Detection in IPv6 to prevent Denial of Service Attack",
+  "description": "一种基于DAD的重复地址检测技术",
+  "keywords": [
+    "Duplicate Address Detection", "Denial of Service Attack", "IPv6 addressing", "IoT mesh network", "WSN"
+  ],
+  "articleBody": "一. Building IPv6 addressing scheme using Hybrid Duplicate Address Detection to prevent Denial of Service Attack 1. Duplicate Address Detection Whenever a host is assigned an IPv6 address, it performs a DAD check to ensure that no other hosts are already using or vying for the same address. DAD的过程通常包括以下步骤： \t主机生成一个IPv6地址，并将其标记为“tentative”（临时）状态。 \t主机发送一个邻居发现协议的邻居请求（NS）消息，询问网络上是否有其他设备正在使用这个地址。 \t如果在一定时间内没有收到邻居通告（NA）消息作为响应，或者收到的响应表明没有冲突，那么主机可以确认这个地址是唯一的，并开始使用它。 \t如果收到一个NA消息，表明网络上已经有设备在使用这个地址，主机则必须选择另一个地址或采取其他措施解决冲突。 Static IP address 长期分配给特定设备的IP地址，不会发生变化。 The current defenses against the DAD attack include significant flaws, such as excessive computation, non-scalability, and the need to modify the protocol.\n2. Denial of Service (DoS) and Man-In-The-Middle (MITM) attacks. Denial of Service (DoS) 攻击 DoS攻击是一种使网络服务不可用的攻击方式。攻击者的目标是使目标服务器、服务或网络无法处理合法用户的请求。这通常是通过以下几种方式实现的： \t流量过载：攻击者发送大量流量到目标服务器，使其网络带宽饱和，无法处理正常流量。 \t资源耗尽：攻击者利用服务器或服务的特定漏洞，使其消耗过多资源（如CPU、内存），导致无法响应合法请求。 \t服务拒绝：攻击者通过发送特定的请求，使服务崩溃或进入无法处理其他请求的状态。 Man-In-The-Middle (MITM) 攻击 MITM攻击是一种攻击者插入到两个通信方之间的攻击方式。攻击者可以截获、修改和转发通信双方的数据，而通信方可能毫不知情。这种攻击通常涉及以下步骤： \t拦截通信：攻击者通过各种手段（如伪造Wi-Fi网络）截获两个通信方之间的数据传输。 \t身份伪装：攻击者伪装成合法的通信方，与另一方建立信任关系。 \t数据篡改：攻击者可以读取、修改或注入恶意数据到传输中，而不被通信方察觉。 \t会话劫持：攻击者可能完全接管一个或两个通信方的会话，进行未授权的操作。\n3. What types of network requirements are needed? The hybrid DAD method is demonstrated in this study to reduce the DoS attack during the IPv6 setup process in the network. In IPv6, to enhance privacy and security, IP addresses are commonly divided into two parts: the DAD ID (usually the network prefix) and the node ID (often generated from the device’s MAC address but can also be randomly generated to improve privacy). This method is known as Privacy Extensions for Addresses, and its purpose is to reduce the risk of exposing user privacy information through IP addresses. Address predictability: If the node ID is fixed or predictable (such as those based on a MAC address), it allows attackers to more easily guess or track a specific device’s IP address. Using randomly generated node IDs can reduce this risk. Multicast listening: During the Duplicate Address Detection (DAD) process, address queries are completed by sending multicast messages, which may increase the network’s attack surface. For example, attackers can listen to these multicast requests to identify new devices in the network or prevent legitimate devices from using their IP addresses by sending false neighbor advertisement messages. DAD conflicts: Attackers can intentionally respond to all DAD queries in the network, causing address configuration failure. This type of attack is known as a DAD conflict attack.\n4. The Mechanism Of Hybrid Duplicate Address Detection IPv6地址结构 IPv6地址总长128位，通常被分为两个64位的部分： 全局路由前缀（Global Routing Prefix, GRP）：64位，用于网络路由。 接口标识符（Interface ID, IID）：64位，用于在本地网络中唯一标识接口。 接口标识符的进一步细分接口标识符进一步被分为两个32位部分： 最高有效位（Most Significant bits, MS-32） 最低有效位（Least Significant bits, LS-32）\n这两个部分又各自被分为两个16位部分，用于混合DAD的计算： LS-32 分为： DAD ID（16位） Secret ID-1（16位） MS-32 分为： Node ID（16位） Secret ID-2（16位） 混合DAD值的计算 在进行重复地址检测时，会使用异或（XOR）运算来计算混合DAD值，以提高安全性： 对于邻居请求帧（NS, Neighbor Solicitation）：计算最低有效16位（LS-16），通过对DAD ID和Secret ID-1进行异或（XOR）运算。 对于邻居通告帧（NA, Neighbor Advertisement）：当网络中检测到地址重复时，已建立节点会响应一个携带混合DAD最高有效16位（MS-16）的NA帧。MS-16是通过对Node ID和Secret ID-2进行异或（XOR）运算得到的。这种方法通过使用秘密ID（Secret IDs）和XOR运算，增加了地址配置过程的隐私性和安全性，使得攻击者难以预测或推断出实际的接口标识符。这样的设计可以有效防止一些常见的网络攻击，如地址欺骗和DAD冲突。\n假设的IPv6接口标识符（IID）为 0000:8a2e:0370:7334。 MS-32: 0000:8a2e Node ID: 0000 Secret ID-2: 8a2e LS-32: 0370:7334 DAD ID: 0370 Secret ID-1: 7334 进行XOR计算 MS-16 (混合): 0000 XOR 8a2e = 8a2e LS-16 (混合): 0370 XOR 7334 = 7044 算法 1：使用混合DAD过程的IP配置 初始化：hybrid DAD_count 和 hybrid DAD_timeout 设为初始值。 生成新IP地址：设备尝试使用 0000:8a2e:0370:7334。 广播NS_hybrid DAD：设备发送带有混合 LS-16 (7044) 的NS请求。 接收NA_hybrid DAD：等待网络上其他设备的响应。 循环检测： 如果收到的NA消息是来自一个已经建立的节点，且 MS-16 (8a2e) 匹配，说明地址可能冲突。 如果达到 thresholdDAD（尝试次数上限），并且冲突持续存在，设备会重新生成新的MS位并重复过程。 超时或阈值：如果持续收到冲突响应，或者超时，设备广播网络错误消息并报告失败。 算法 2：验证混合DAD 接收NS_hybrid DAD：设备接收来自其他设备的NS请求，检查 LS-16。 验证LS-16： 如果 LS-16 (7044) 与本地配置匹配，发送NA_hybrid DAD响应，表明存在地址冲突。 如果不匹配，丢弃请求并返回失败，表明地址是唯一的。 结果与通讯 如果DAD过程成功，没有冲突，设备将确认其IP地址 0000:8a2e:0370:7334 是唯一的，并用于通信。 如果存在冲突，设备需重新选择Node ID或DAD ID部分，重新计算，直到没有冲突为止。 这个过程确保IPv6地址在网络上的唯一性，避免了地址冲突，同时通过混合DAD的额外安全措施（使用XOR和秘密ID），增加了网络通信的安全性和隐私保护。\n",
+  "wordCount" : "2198",
+  "inLanguage": "zh",
+  "image":"https://Clow5211.github.io/posts/blog/blog2/th.jpg","datePublished": "2024-09-23T13:00:00+08:00",
+  "dateModified": "2024-09-23T13:00:00+08:00",
+  "author":[{
+    "@type": "Person",
+    "name": "Clow"
+  }],
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://Clow5211.github.io/posts/blog/blog2/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Clow5211's Blog",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://Clow5211.github.io/img/%E7%8C%AB%E7%8C%AB.png"
+    }
+  }
+}
+</script>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://Clow5211.github.io/" accesskey="h" title="Clow5211 Blog (Alt + H)">
+                <img src="https://Clow5211.github.io/img/%E7%8C%AB%E7%8C%AB.png" alt="" aria-label="logo"
+                    height="40">Clow5211 Blog</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <ul class="lang-switch"><li>|</li>
+                </ul>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://Clow5211.github.io/search" title="🔍 搜索 (Alt &#43; /)" accesskey=/>
+                    <span>🔍 搜索</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://Clow5211.github.io/" title="🏠 主页">
+                    <span>🏠 主页</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://Clow5211.github.io/posts" title="📚 文章">
+                    <span>📚 文章</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://Clow5211.github.io/tags" title="🧩 标签">
+                    <span>🧩 标签</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://Clow5211.github.io/archives/" title="⏱️ 时间轴">
+                    <span>⏱️ 时间轴</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://Clow5211.github.io/about" title="🙋🏻‍♂️ 关于">
+                    <span>🙋🏻‍♂️ 关于</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://Clow5211.github.io/links" title="🤝 友链">
+                    <span>🤝 友链</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://Clow5211.github.io/">主页</a>&nbsp;»&nbsp;<a href="https://Clow5211.github.io/posts/">📚文章</a>&nbsp;»&nbsp;<a href="https://Clow5211.github.io/posts/blog/">🧱 记录</a></div>
+    <h1 class="post-title">
+      Hybrid Duplicate Address Detection in IPv6 to prevent Denial of Service Attack
+    </h1>
+    <div class="post-description">
+      一种基于DAD的重复地址检测技术
+    </div>
+    <div class="post-meta">
+
+<style>
+    i[id*="post_meta_style"] {
+        display: flex;
+        align-items: center;
+        margin: 0 0 10px 0;
+    }
+
+    .parent-post-meta {
+        display: flex;
+        flex-wrap: wrap;
+        opacity: 0.8;
+    }
+</style>
+
+<span class="parent-post-meta">
+    <span id="post_meta_style_1">
+        <span class="fa fa-calendar-check-o"></span>
+        <span>2024-09-23
+            &nbsp;&nbsp;
+        </span>
+    </span>
+    
+    
+    
+    
+    
+    
+    
+    <span id="post_meta_style_3">
+        <span class="fa fa-file-word-o"></span>
+        <span>2198字
+            &nbsp;&nbsp;
+        </span>
+    </span>
+    <span id="post_meta_style_4">
+        <span class="fa fa-clock-o"></span>
+        <span>5分钟
+            &nbsp;&nbsp;
+        </span>
+    </span>
+    <span id="post_meta_style_5">
+        <span class="fa fa-user-o"></span>
+        <span>
+作者:&nbsp;Clow
+            &nbsp;&nbsp;
+        </span>
+    </span>
+    <span id="post_meta_style_6">
+        <span class="fa fa-tags" style="opacity: 0.8"></span>
+        <span>
+            <span class="post-tags-meta">
+                <a href="https://Clow5211.github.io/tags/ipv6/" style="color: var(--secondary)!important;">IPv6</a>
+                &nbsp;<a href="https://Clow5211.github.io/tags/duplicate-address-detection-dad/" style="color: var(--secondary)!important;">Duplicate Address Detection (DAD)</a>
+                &nbsp;<a href="https://Clow5211.github.io/tags/blog/" style="color: var(--secondary)!important;">Blog</a>
+            </span>
+        </span>
+    </span>
+</span>
+
+</div>
+  </header> 
+<figure class="entry-cover"><img loading="lazy" src="https://Clow5211.github.io/posts/blog/blog2/th.jpg" alt="DoS attack mitigation technology">
+        <p>DoS attack mitigation technology</p>
+</figure><div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">目录</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#%e4%b8%80-building-ipv6-addressing-scheme-using-hybrid-duplicate-address-detection-to-prevent-denial-of-service-attack" aria-label="一. Building IPv6 addressing scheme using Hybrid Duplicate Address Detection to prevent Denial of Service Attack">一. Building IPv6 addressing scheme using Hybrid Duplicate Address Detection to prevent Denial of Service Attack</a><ul>
+                        
+                <li>
+                    <a href="#1-duplicate-address-detection" aria-label="1. Duplicate Address Detection">1. Duplicate Address Detection</a></li>
+                <li>
+                    <a href="#2-denial-of-service-dos-and-man-in-the-middle-mitm-attacks" aria-label="2. Denial of Service (DoS) and Man-In-The-Middle (MITM) attacks.">2. Denial of Service (DoS) and Man-In-The-Middle (MITM) attacks.</a></li>
+                <li>
+                    <a href="#3-what-types-of-network-requirements-are-needed" aria-label="3. What types of network requirements are needed?">3. What types of network requirements are needed?</a></li>
+                <li>
+                    <a href="#4-the-mechanism--of--hybrid-duplicate-address-detection" aria-label="4. The Mechanism  Of  Hybrid Duplicate Address Detection">4. The Mechanism  Of  Hybrid Duplicate Address Detection</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="一-building-ipv6-addressing-scheme-using-hybrid-duplicate-address-detection-to-prevent-denial-of-service-attack">一. Building IPv6 addressing scheme using Hybrid Duplicate Address Detection to prevent Denial of Service Attack<a hidden class="anchor" aria-hidden="true" href="#一-building-ipv6-addressing-scheme-using-hybrid-duplicate-address-detection-to-prevent-denial-of-service-attack">#</a></h2>
+<h3 id="1-duplicate-address-detection">1. Duplicate Address Detection<a hidden class="anchor" aria-hidden="true" href="#1-duplicate-address-detection">#</a></h3>
+<p>Whenever a host is assigned an IPv6 address, it performs a DAD check to ensure that no other hosts are already using or vying for the same address.
+DAD的过程通常包括以下步骤：
+	主机生成一个IPv6地址，并将其标记为“tentative”（临时）状态。
+	主机发送一个邻居发现协议的邻居请求（NS）消息，询问网络上是否有其他设备正在使用这个地址。
+	如果在一定时间内没有收到邻居通告（NA）消息作为响应，或者收到的响应表明没有冲突，那么主机可以确认这个地址是唯一的，并开始使用它。
+	如果收到一个NA消息，表明网络上已经有设备在使用这个地址，主机则必须选择另一个地址或采取其他措施解决冲突。
+Static IP address 长期分配给特定设备的IP地址，不会发生变化。
+The current defenses against the DAD attack include significant flaws, such as excessive computation, non-scalability, and the need to modify the protocol.</p>
+<h3 id="2-denial-of-service-dos-and-man-in-the-middle-mitm-attacks">2. Denial of Service (DoS) and Man-In-The-Middle (MITM) attacks.<a hidden class="anchor" aria-hidden="true" href="#2-denial-of-service-dos-and-man-in-the-middle-mitm-attacks">#</a></h3>
+<p>Denial of Service (DoS) 攻击
+DoS攻击是一种使网络服务不可用的攻击方式。攻击者的目标是使目标服务器、服务或网络无法处理合法用户的请求。这通常是通过以下几种方式实现的：
+	流量过载：攻击者发送大量流量到目标服务器，使其网络带宽饱和，无法处理正常流量。
+	资源耗尽：攻击者利用服务器或服务的特定漏洞，使其消耗过多资源（如CPU、内存），导致无法响应合法请求。
+	服务拒绝：攻击者通过发送特定的请求，使服务崩溃或进入无法处理其他请求的状态。
+Man-In-The-Middle (MITM) 攻击
+MITM攻击是一种攻击者插入到两个通信方之间的攻击方式。攻击者可以截获、修改和转发通信双方的数据，而通信方可能毫不知情。这种攻击通常涉及以下步骤：
+	拦截通信：攻击者通过各种手段（如伪造Wi-Fi网络）截获两个通信方之间的数据传输。
+	身份伪装：攻击者伪装成合法的通信方，与另一方建立信任关系。
+	数据篡改：攻击者可以读取、修改或注入恶意数据到传输中，而不被通信方察觉。
+	会话劫持：攻击者可能完全接管一个或两个通信方的会话，进行未授权的操作。</p>
+<h3 id="3-what-types-of-network-requirements-are-needed">3. What types of network requirements are needed?<a hidden class="anchor" aria-hidden="true" href="#3-what-types-of-network-requirements-are-needed">#</a></h3>
+<p>The hybrid DAD method is demonstrated in this study to reduce the DoS attack during the IPv6 setup process in the network. In IPv6, to enhance privacy and security, IP addresses are commonly divided into two parts: the DAD ID (usually the network prefix) and the node ID (often generated from the device&rsquo;s MAC address but can also be randomly generated to improve privacy). This method is known as Privacy Extensions for Addresses, and its purpose is to reduce the risk of exposing user privacy information through IP addresses.
+Address predictability: If the node ID is fixed or predictable (such as those based on a MAC address), it allows attackers to more easily guess or track a specific device&rsquo;s IP address. Using randomly generated node IDs can reduce this risk.
+Multicast listening: During the Duplicate Address Detection (DAD) process, address queries are completed by sending multicast messages, which may increase the network&rsquo;s attack surface. For example, attackers can listen to these multicast requests to identify new devices in the network or prevent legitimate devices from using their IP addresses by sending false neighbor advertisement messages.
+DAD conflicts: Attackers can intentionally respond to all DAD queries in the network, causing address configuration failure. This type of attack is known as a DAD conflict attack.</p>
+<h3 id="4-the-mechanism--of--hybrid-duplicate-address-detection">4. The Mechanism  Of  Hybrid Duplicate Address Detection<a hidden class="anchor" aria-hidden="true" href="#4-the-mechanism--of--hybrid-duplicate-address-detection">#</a></h3>
+<p><img loading="lazy" src="../blog2/format_of_ipv6_address.png" alt="DAD"  />
+</p>
+<p>IPv6地址结构
+IPv6地址总长128位，通常被分为两个64位的部分：
+全局路由前缀（Global Routing Prefix, GRP）：64位，用于网络路由。
+接口标识符（Interface ID, IID）：64位，用于在本地网络中唯一标识接口。
+接口标识符的进一步细分接口标识符进一步被分为两个32位部分：
+最高有效位（Most Significant bits, MS-32）
+最低有效位（Least Significant bits, LS-32）</p>
+<p>这两个部分又各自被分为两个16位部分，用于混合DAD的计算：
+LS-32 分为：
+DAD ID（16位）
+Secret ID-1（16位）
+MS-32 分为：
+Node ID（16位）
+Secret ID-2（16位）
+混合DAD值的计算
+在进行重复地址检测时，会使用异或（XOR）运算来计算混合DAD值，以提高安全性：
+对于邻居请求帧（NS, Neighbor Solicitation）：计算最低有效16位（LS-16），通过对DAD ID和Secret ID-1进行异或（XOR）运算。
+对于邻居通告帧（NA, Neighbor Advertisement）：当网络中检测到地址重复时，已建立节点会响应一个携带混合DAD最高有效16位（MS-16）的NA帧。MS-16是通过对Node ID和Secret ID-2进行异或（XOR）运算得到的。这种方法通过使用秘密ID（Secret IDs）和XOR运算，增加了地址配置过程的隐私性和安全性，使得攻击者难以预测或推断出实际的接口标识符。这样的设计可以有效防止一些常见的网络攻击，如地址欺骗和DAD冲突。</p>
+<p>假设的IPv6接口标识符（IID）为 0000:8a2e:0370:7334。
+MS-32: 0000:8a2e
+Node ID: 0000
+Secret ID-2: 8a2e
+LS-32: 0370:7334
+DAD ID: 0370
+Secret ID-1: 7334
+进行XOR计算
+MS-16 (混合): 0000 XOR 8a2e = 8a2e
+LS-16 (混合): 0370 XOR 7334 = 7044
+算法 1：使用混合DAD过程的IP配置
+初始化：hybrid DAD_count 和 hybrid DAD_timeout 设为初始值。
+生成新IP地址：设备尝试使用 0000:8a2e:0370:7334。
+广播NS_hybrid DAD：设备发送带有混合 LS-16 (7044) 的NS请求。
+接收NA_hybrid DAD：等待网络上其他设备的响应。
+循环检测：
+如果收到的NA消息是来自一个已经建立的节点，且 MS-16 (8a2e) 匹配，说明地址可能冲突。
+如果达到 thresholdDAD（尝试次数上限），并且冲突持续存在，设备会重新生成新的MS位并重复过程。
+超时或阈值：如果持续收到冲突响应，或者超时，设备广播网络错误消息并报告失败。
+算法 2：验证混合DAD
+接收NS_hybrid DAD：设备接收来自其他设备的NS请求，检查 LS-16。
+验证LS-16：
+如果 LS-16 (7044) 与本地配置匹配，发送NA_hybrid DAD响应，表明存在地址冲突。
+如果不匹配，丢弃请求并返回失败，表明地址是唯一的。
+结果与通讯
+如果DAD过程成功，没有冲突，设备将确认其IP地址 0000:8a2e:0370:7334 是唯一的，并用于通信。
+如果存在冲突，设备需重新选择Node ID或DAD ID部分，重新计算，直到没有冲突为止。
+这个过程确保IPv6地址在网络上的唯一性，避免了地址冲突，同时通过混合DAD的额外安全措施（使用XOR和秘密ID），增加了网络通信的安全性和隐私保护。</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://Clow5211.github.io/tags/ipv6/">IPv6</a></li>
+      <li><a href="https://Clow5211.github.io/tags/duplicate-address-detection-dad/">Duplicate Address Detection (DAD)</a></li>
+      <li><a href="https://Clow5211.github.io/tags/blog/">Blog</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="next" href="https://Clow5211.github.io/posts/read/read1/">
+    <span class="title">下一页 »</span>
+    <br>
+    <span>SpeechTokenizer: Unified Speech Tokenizer For Speech Language Models</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2024 <a href="https://Clow5211.github.io/">Clow5211&#39;s Blog</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = '复制';
+
+        function copyingDone() {
+            copybutton.innerHTML = '已复制！';
+            setTimeout(() => {
+                copybutton.innerHTML = '复制';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>
