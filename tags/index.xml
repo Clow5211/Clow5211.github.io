@@ -6,13 +6,31 @@
     <description>Recent content in 🧩 标签 on Clow5211&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh</language>
-    <lastBuildDate>Mon, 23 Sep 2024 13:00:00 +0800</lastBuildDate><atom:link href="https://Clow5211.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 27 Sep 2024 13:00:00 +0800</lastBuildDate><atom:link href="https://Clow5211.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Blog</title>
       <link>https://Clow5211.github.io/tags/blog/</link>
-      <pubDate>Mon, 23 Sep 2024 13:00:00 +0800</pubDate>
+      <pubDate>Fri, 27 Sep 2024 13:00:00 +0800</pubDate>
       
       <guid>https://Clow5211.github.io/tags/blog/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>IDS</title>
+      <link>https://Clow5211.github.io/tags/ids/</link>
+      <pubDate>Fri, 27 Sep 2024 13:00:00 +0800</pubDate>
+      
+      <guid>https://Clow5211.github.io/tags/ids/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>IPv6</title>
+      <link>https://Clow5211.github.io/tags/ipv6/</link>
+      <pubDate>Fri, 27 Sep 2024 13:00:00 +0800</pubDate>
+      
+      <guid>https://Clow5211.github.io/tags/ipv6/</guid>
       <description></description>
     </item>
     
@@ -22,15 +40,6 @@
       <pubDate>Mon, 23 Sep 2024 13:00:00 +0800</pubDate>
       
       <guid>https://Clow5211.github.io/tags/duplicate-address-detection-dad/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>IPv6</title>
-      <link>https://Clow5211.github.io/tags/ipv6/</link>
-      <pubDate>Mon, 23 Sep 2024 13:00:00 +0800</pubDate>
-      
-      <guid>https://Clow5211.github.io/tags/ipv6/</guid>
       <description></description>
     </item>
     

@@ -6,22 +6,22 @@
     <description>Recent content in Blog on Clow5211&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh</language>
-    <lastBuildDate>Mon, 23 Sep 2024 13:00:00 +0800</lastBuildDate><atom:link href="https://Clow5211.github.io/tags/blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 27 Sep 2024 13:00:00 +0800</lastBuildDate><atom:link href="https://Clow5211.github.io/tags/blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>一种双阶段DDoS攻击检测方式</title>
+      <link>https://Clow5211.github.io/posts/blog/blog3/</link>
+      <pubDate>Fri, 27 Sep 2024 13:00:00 +0800</pubDate>
+      
+      <guid>https://Clow5211.github.io/posts/blog/blog3/</guid>
+      <description>一种基于深度学习的DDoS检测方式</description>
+    </item>
+    
     <item>
       <title>Hybrid Duplicate Address Detection in IPv6 to prevent Denial of Service Attack</title>
       <link>https://Clow5211.github.io/posts/blog/blog2/</link>
       <pubDate>Mon, 23 Sep 2024 13:00:00 +0800</pubDate>
       
       <guid>https://Clow5211.github.io/posts/blog/blog2/</guid>
-      <description>一种基于DAD的重复地址检测技术</description>
-    </item>
-    
-    <item>
-      <title>Hybrid Duplicate Address Detection in IPv6 to prevent Denial of Service Attack</title>
-      <link>https://Clow5211.github.io/posts/blog/blog3/</link>
-      <pubDate>Mon, 23 Sep 2024 13:00:00 +0800</pubDate>
-      
-      <guid>https://Clow5211.github.io/posts/blog/blog3/</guid>
       <description>一种基于DAD的重复地址检测技术</description>
     </item>
     
